@@ -10,7 +10,7 @@ import time
 logger = logging.getLogger(__name__)
 
 
-# 文件上传：form-data/Multipart方式
+# 文件上传：form-data/Multipart方式 POST方法
 def index(request):
     sendfile = request.FILES.items()
     haveFiles = False
@@ -55,7 +55,7 @@ def index(request):
     result = {"errcode": 200, "errmsg": "上传成功"}
     return HttpResponse(json.dumps(result), content_type="application/json")
 
-# 文件上传：Body中传Json方式
+# 文件上传：Body中传Json方式 POST方法
 def body(request):
     try:
         jsData = json.loads(str(request.body, encoding='utf-8'))
@@ -110,6 +110,48 @@ def body(request):
 
 # 提供图片下载功能
 def picture(request):
-    file = open("/home/hych007/project/testface.jpg", "rb")
-    response = HttpResponse(content=file.read(), content_type="image/jpg")
+    file = open("/home/hych007/project/100001.png", "rb")
+    response = HttpResponse(content=file.read(), content_type="image/png")
     return response
+
+# def writeLog(text):
+#     with open('/mnt/testlog.txt', 'a+') as fp:
+#         fp.write(text+'\n')
+
+# 文件上传：form-data/Multipart方式  PUT方法
+def puttest(request):
+    # writeLog('get a request')
+    if(request.method != "PUT"):
+        result = {"errcode": 1, "errmsg": "Not put method"}
+        # writeLog('Not put method')
+        return HttpResponse(json.dumps(result), content_type="application/json")
+
+    put, files = request.parse_file_upload(request.META, request)
+    # request.FILES.update(files)
+    # request.POST = put.dict()
+
+    fileitems = files.items()
+    haveFiles = False
+    for key, value in fileitems:
+        # fileData = files.get(key)
+        if value:
+            haveFiles = True
+            # 图片文件的读写要用二进制模式
+            name = value.name
+            with open('/home/hych007/project/serverproject/' + name, 'wb') as fp:
+                fp.write(bytes(value.read()))
+
+    if not haveFiles:
+        result = {"errcode": 2, "errmsg": "No file data"}
+        # writeLog('No file data')
+        return HttpResponse(json.dumps(result), content_type="application/json")
+
+    dataInfo = put.get("FaceDataRecord", "")
+    if not dataInfo:
+        result = {"errcode": 3, "errmsg": "no FaceDataRecord data"}
+        # writeLog('no FaceDataRecord data')
+        return HttpResponse(json.dumps(result), content_type="application/json")
+
+    result = {"errcode": 200, "errmsg": dataInfo}
+    # writeLog('request secceed')
+    return HttpResponse(json.dumps(result), content_type="application/json")
